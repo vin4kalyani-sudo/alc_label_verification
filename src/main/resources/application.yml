@@ -62,6 +62,10 @@ app:
     applicant-company: ${APP_SEED_APPLICANT_COMPANY:Sample Distilling Co.}
   # Extra accounts, as a JSON array (see docs/user-accounts.md). Prefer bcrypt hashes over plain passwords.
   users: ${APP_USERS:}
+  # Demo mode: account picker on the login page, sign-in without password. OFF by default.
+  demo-login:
+    enabled: ${APP_DEMO_LOGIN:false}
+    accounts: ${APP_DEMO_LOGIN_ACCOUNTS:}
   pipeline:
     timeout: 60s
   # Local OCR (Tesseract via Tess4J). Blank paths are auto-detected.

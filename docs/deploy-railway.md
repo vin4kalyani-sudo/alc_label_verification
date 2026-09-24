@@ -87,6 +87,7 @@ In the app service's **Variables** tab:
 | `SPRING_PROFILES_ACTIVE` | Optional. On Railway the `railway` profile is switched on automatically when no profile is set. |
 | `APP_SEED_PASSWORD` | A long random password for the two bootstrap accounts |
 | `APP_SEED_SPECIALIST_EMAIL`, `APP_SEED_APPLICANT_EMAIL` | Optional: your own addresses |
+| `APP_DEMO_LOGIN` | Optional, **demo only**: `true` adds an account picker to the login page that signs in without a password. Anyone can then use it ([user-accounts.md](user-accounts.md#demo-mode-pick-an-account-on-the-login-page)) |
 | `APP_USERS` | Optional: more specialists and applicants, as a JSON array with bcrypt hashes ([user-accounts.md](user-accounts.md)) |
 | `GOOGLE_VISION_API_KEY`, `OPENAI_API_KEY` | Optional: enable the cloud pipeline |
 

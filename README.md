@@ -120,7 +120,7 @@ flowchart LR
 | Database | PostgreSQL 17 (H2 for demo and tests), Flyway migrations |
 | OCR | Tesseract 5 via Tess4J (local); Google Cloud Vision REST (cloud) |
 | Classification | OpenAI Chat Completions with strict JSON schema (cloud) |
-| Testing | JUnit 5, AssertJ, Spring MockMvc, spring-security-test (102 tests, incl. real-OCR end-to-end) |
+| Testing | JUnit 5, AssertJ, Spring MockMvc, spring-security-test (110 tests, incl. real-OCR end-to-end) |
 
 ## Project layout
 
@@ -229,5 +229,5 @@ Stateless HTTP Basic. Full reference in [docs/api.md](docs/api.md).
 | [docs/api.md](docs/api.md) | REST reference |
 | [docs/user-accounts.md](docs/user-accounts.md) | Creating specialist and applicant accounts |
 | [docs/user-flows.md](docs/user-flows.md) | Applicant and specialist workflows, edge cases |
-| [docs/test-scenarios.md](docs/test-scenarios.md) | 133 test scenarios with automated and manual evidence |
+| [docs/test-scenarios.md](docs/test-scenarios.md) | 136 test scenarios with automated and manual evidence |
 | [docs/production.md](docs/production.md) | Production-readiness checklist and roadmap |

@@ -8,6 +8,8 @@ import gov.ttb.labelverification.domain.User;
 import gov.ttb.labelverification.domain.UserRole;
 import gov.ttb.labelverification.repository.ApplicantRepository;
 import gov.ttb.labelverification.repository.UserRepository;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -35,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
  *       accounts. Applicant companies are created by name if they don't exist.</li>
  *   <li>Invalid entries are skipped with a log message. Passwords are never logged.</li>
  * </ul>
+ * The value may also be Base64-encoded JSON, which survives dashboards that alter {@code $}.
  * Runs after {@link DataSeeder}, independently of {@code APP_SEED}.
  */
 @Component
@@ -71,9 +74,15 @@ public class UserProvisioner implements ApplicationRunner {
             log.info("APP_USERS is not set on this service — no additional accounts provisioned.");
             return;
         }
+        String json = decode(config.trim());
+        if (json == null) {
+            log.error("APP_USERS is neither a JSON array nor Base64-encoded JSON ({} characters); "
+                    + "no accounts were provisioned.", config.trim().length());
+            return;
+        }
         List<Entry> entries;
         try {
-            entries = List.of(JSON.readValue(config, Entry[].class));
+            entries = List.of(JSON.readValue(json, Entry[].class));
         } catch (JsonProcessingException e) {
             // Never echo the value: it may contain passwords.
             log.error("APP_USERS is not valid JSON (line {}, column {}); no accounts were provisioned.",
@@ -95,6 +104,30 @@ public class UserProvisioner implements ApplicationRunner {
     }
 
     enum Outcome { CREATED, UPDATED, UNCHANGED, SKIPPED }
+
+    /**
+     * Accepts the JSON array as-is, or Base64-encoded (standard or URL-safe alphabet), for
+     * hosting dashboards that mishandle the {@code $ { } "} characters in JSON and bcrypt hashes.
+     *
+     * @return the JSON text, or null if the value is neither
+     */
+    static String decode(String value) {
+        if (value.startsWith("[")) {
+            return value;
+        }
+        String compact = value.replaceAll("\\s", "");
+        for (Base64.Decoder decoder : List.of(Base64.getDecoder(), Base64.getUrlDecoder())) {
+            try {
+                String decoded = new String(decoder.decode(compact), StandardCharsets.UTF_8).trim();
+                if (decoded.startsWith("[")) {
+                    return decoded;
+                }
+            } catch (IllegalArgumentException ignored) {
+                // try the next alphabet
+            }
+        }
+        return null;
+    }
 
     Outcome apply(Entry e, int position) {
         String email = e.email() == null ? "" : e.email().trim();

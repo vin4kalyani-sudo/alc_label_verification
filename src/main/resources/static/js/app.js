@@ -108,4 +108,110 @@
     button.addEventListener('click', readLabel);
     input.addEventListener('change', function () { button.disabled = !input.files || input.files.length === 0; });
   }
+
+  // Demo mode on the login page: the email field is a combobox listing demo accounts.
+  // Choosing one fills the email and a masked placeholder password and routes "Sign in" to the
+  // demo endpoint. The server only holds password hashes, so no real password reaches the
+  // browser. Editing either field afterwards switches back to a normal password check.
+  var loginForm = document.getElementById('login-form');
+  var panel = document.getElementById('demo-panel');
+  if (loginForm && panel && loginForm.getAttribute('data-demo-action')) {
+    var normalAction = loginForm.getAttribute('action');
+    var demoAction = loginForm.getAttribute('data-demo-action');
+    var emailInput = document.getElementById('email');
+    var passwordInput = document.getElementById('password');
+    var signIn = document.getElementById('sign-in');
+    var options = Array.prototype.slice.call(panel.querySelectorAll('[role=option]'));
+    var active = -1;
+    var filling = false;
+
+    var visible = function () { return options.filter(function (o) { return !o.hidden; }); };
+    var setActive = function (opt) {
+      options.forEach(function (o) { o.classList.remove('active'); o.setAttribute('aria-selected', 'false'); });
+      if (opt) {
+        opt.classList.add('active');
+        opt.setAttribute('aria-selected', 'true');
+        emailInput.setAttribute('aria-activedescendant', opt.id);
+        opt.scrollIntoView({ block: 'nearest' });
+      } else {
+        emailInput.removeAttribute('aria-activedescendant');
+      }
+    };
+    var open = function () {
+      if (visible().length === 0) { close(); return; }
+      panel.hidden = false;
+      emailInput.setAttribute('aria-expanded', 'true');
+    };
+    var close = function () {
+      panel.hidden = true;
+      emailInput.setAttribute('aria-expanded', 'false');
+      active = -1;
+      setActive(null);
+    };
+    var filter = function () {
+      var q = emailInput.value.trim().toLowerCase();
+      options.forEach(function (o) {
+        var hay = (o.getAttribute('data-name') + ' ' + o.getAttribute('data-email')).toLowerCase();
+        o.hidden = q !== '' && hay.indexOf(q) === -1;
+      });
+      active = -1;
+      setActive(null);
+    };
+    var placeholder = function () {
+      var bytes = new Uint8Array(12);
+      window.crypto.getRandomValues(bytes);
+      return 'demo-' + Array.prototype.map.call(bytes, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+    };
+    var useNormalLogin = function () {
+      loginForm.setAttribute('action', normalAction);
+      emailInput.classList.remove('prefilled');
+      passwordInput.classList.remove('prefilled');
+    };
+    var choose = function (opt) {
+      filling = true;
+      emailInput.value = opt.getAttribute('data-email');
+      passwordInput.value = placeholder();
+      filling = false;
+      emailInput.classList.add('prefilled');
+      passwordInput.classList.add('prefilled');
+      loginForm.setAttribute('action', demoAction);
+      close();
+      signIn.focus();
+    };
+
+    options.forEach(function (o) {
+      // mousedown (not click) so the email field's blur doesn't close the panel first
+      o.addEventListener('mousedown', function (e) { e.preventDefault(); choose(o); });
+    });
+    emailInput.addEventListener('focus', function () { filter(); open(); });
+    emailInput.addEventListener('click', function () { filter(); open(); });
+    emailInput.addEventListener('blur', close);
+    emailInput.addEventListener('input', function () {
+      if (!filling && loginForm.getAttribute('action') === demoAction) {
+        passwordInput.value = '';
+        useNormalLogin();
+      }
+      filter();
+      open();
+    });
+    passwordInput.addEventListener('input', function () {
+      if (!filling && loginForm.getAttribute('action') === demoAction) { useNormalLogin(); }
+    });
+    emailInput.addEventListener('keydown', function (e) {
+      var list = visible();
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (panel.hidden) { filter(); open(); list = visible(); }
+        if (list.length === 0) { return; }
+        active = e.key === 'ArrowDown' ? (active + 1) % list.length : (active - 1 + list.length) % list.length;
+        setActive(list[active]);
+      } else if (e.key === 'Enter' && !panel.hidden && active >= 0 && list[active]) {
+        e.preventDefault();
+        choose(list[active]);
+      } else if (e.key === 'Escape' && !panel.hidden) {
+        e.preventDefault();
+        close();
+      }
+    });
+  }
 })();

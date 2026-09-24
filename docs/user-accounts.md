@@ -54,3 +54,19 @@ Paste the output, which starts with `{bcrypt}`, into `passwordHash`.
 ### On Railway
 
 In the app service's **Variables**, add `APP_USERS` with the JSON array as the value (one line is fine), then **Deploy**. Check the log for the `APP_USERS:` summary line.
+
+## Demo mode: pick an account on the login page
+
+For demonstrations, the login page's **Email** field can open a list of demo accounts, each with initials, name, email and a Specialist or Applicant badge. Picking one fills in the email and password; then click **Sign in**.
+
+| Variable | Default | Effect |
+|---|---|---|
+| `APP_DEMO_LOGIN` | `false` | `true` turns the Email field into a demo-account picker |
+| `APP_DEMO_LOGIN_ACCOUNTS` | *(all accounts)* | Comma-separated emails to offer, e.g. `specialist2@example.gov,applicant2@example.com` |
+
+- **Anyone who can reach the site can sign in as any listed account while this is on.** Use it only with fictional data, and remove the variable for real use.
+- The app stores only password hashes, so real passwords are never put in the page. The password box gets a masked placeholder, and **Sign in** uses the demo sign-in endpoint.
+- Typing a different email or password afterwards switches back to a normal password check, so regular sign-in keeps working.
+- The list opens on focus or click, filters as you type, and supports ↑/↓, Enter and Esc. Screen readers announce it as a combobox.
+- Every startup logs `DEMO LOGIN IS ENABLED …` as a WARN. Demo sign-in is CSRF-protected and gets a fresh session id.
+- Without JavaScript, a simple fallback form appears instead.

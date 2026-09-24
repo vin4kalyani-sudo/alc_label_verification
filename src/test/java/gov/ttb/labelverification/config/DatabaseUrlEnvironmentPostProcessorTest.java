@@ -74,6 +74,8 @@ class DatabaseUrlEnvironmentPostProcessorTest {
                 .contains("railway (automatic)")
                 .doesNotContain("SuperSecret").doesNotContain("user");
         assertThat(DatabaseUrlEnvironmentPostProcessor.diagnostics(Map.<String, String>of()::get))
-                .isEqualTo("Hosting check: railway=false, DATABASE_URL=not set, profile=default");
+                .isEqualTo("Hosting check: railway=false, DATABASE_URL=not set, profile=default, APP_USERS=not set");
+        assertThat(DatabaseUrlEnvironmentPostProcessor.diagnostics(Map.of("APP_USERS", "[{\"role\":\"x\"}]")::get))
+                .endsWith("APP_USERS=set (14 chars, JSON)");
     }
 }

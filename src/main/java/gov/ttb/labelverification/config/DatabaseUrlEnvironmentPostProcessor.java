@@ -102,7 +102,11 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         String profile = !isBlank(env.apply("SPRING_PROFILES_ACTIVE")) ? env.apply("SPRING_PROFILES_ACTIVE")
                 : !isBlank(env.apply("spring.profiles.active")) ? env.apply("spring.profiles.active")
                 : onRailway ? "railway (automatic)" : "default";
-        return "Hosting check: railway=" + onRailway + ", DATABASE_URL=" + db + ", profile=" + profile;
+        String users = env.apply("APP_USERS");
+        String usersState = isBlank(users) ? "not set" : "set (" + users.trim().length() + " chars, "
+                + (users.trim().startsWith("[") ? "JSON" : "Base64") + ")";
+        return "Hosting check: railway=" + onRailway + ", DATABASE_URL=" + db + ", profile=" + profile
+                + ", APP_USERS=" + usersState;
     }
 
     static Map<String, Object> convert(String url, String explicitUser, String explicitPassword) {

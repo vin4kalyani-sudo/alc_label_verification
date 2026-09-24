@@ -189,3 +189,28 @@ dl.kv dd { margin: 0; word-break: break-word; }
 
 /* Values suggested by label pre-fill, until the user edits them */
 .prefilled { background: var(--info-bg); border-color: var(--info); }
+
+/* Demo-mode account picker attached to the login email field */
+.demo-login { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.combo { position: relative; }
+.demo-panel {
+  position: absolute; left: 0; right: 0; top: calc(100% + .35rem); z-index: 20;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(16, 24, 40, .14); padding: .5rem 0; max-height: 22rem; overflow-y: auto;
+}
+.demo-panel-title { font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: .35rem 1rem .5rem; }
+.demo-panel ul { list-style: none; margin: 0; padding: 0; }
+.demo-option { display: flex; align-items: center; gap: .85rem; padding: .6rem 1rem; cursor: pointer; }
+.demo-option:hover, .demo-option.active { background: var(--surface-2); }
+.demo-option[hidden] { display: none; }
+.avatar { flex: none; width: 2.5rem; height: 2.5rem; border-radius: 50%; display: grid; place-items: center; font-weight: 600; font-size: .9rem; }
+.avatar-applicant { background: var(--warn-bg); color: var(--warn); }
+.avatar-specialist { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+.who { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.who-name { font-weight: 600; }
+.who-email { color: var(--muted); font-size: .88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.role-badge { flex: none; display: inline-flex; align-items: center; gap: .3rem; border-radius: 999px; padding: .15rem .6rem; font-size: .8rem; font-weight: 600; }
+.role-badge svg { width: .95rem; height: .95rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.role-applicant { background: var(--warn-bg); color: var(--warn); }
+.role-specialist { background: var(--surface-2); color: var(--text); }
+.demo-panel-note { margin: .35rem 1rem 0; padding-top: .5rem; border-top: 1px solid var(--border); font-size: .78rem; color: var(--muted); }

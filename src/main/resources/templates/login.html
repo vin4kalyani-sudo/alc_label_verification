@@ -13,17 +13,59 @@
     <div class="alert alert-bad" role="alert" th:if="${param.error}">Invalid email or password.</div>
     <div class="alert alert-info" role="status" th:if="${param.logout}">You have been signed out.</div>
 
-    <form th:action="@{/login}" method="post">
-      <div class="field">
+    <form th:action="@{/login}" method="post" id="login-form"
+          th:with="hasDemo=${not #lists.isEmpty(demoAccounts)}"
+          th:data-demo-action="${hasDemo} ? @{/login/demo} : null">
+      <div class="field combo">
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" autocomplete="username" required autofocus>
+        <input type="email" id="email" name="email" autocomplete="username" required autofocus
+               placeholder="name@agency.gov"
+               th:attr="role=${hasDemo} ? 'combobox' : null,
+                        aria-controls=${hasDemo} ? 'demo-listbox' : null,
+                        aria-expanded=${hasDemo} ? 'false' : null,
+                        aria-autocomplete=${hasDemo} ? 'list' : null">
+        <div class="demo-panel" id="demo-panel" th:if="${hasDemo}" hidden>
+          <div class="demo-panel-title" id="demo-panel-title">Demo accounts</div>
+          <ul role="listbox" id="demo-listbox" aria-labelledby="demo-panel-title">
+            <li role="option" class="demo-option" aria-selected="false"
+                th:each="a, it : ${demoAccounts}" th:id="'demo-opt-' + ${it.index}"
+                th:data-email="${a.email}" th:data-name="${a.name}">
+              <span class="avatar" th:classappend="${a.role == 'SPECIALIST'} ? 'avatar-specialist' : 'avatar-applicant'"
+                    th:text="${@fmt.initials(a.name)}" aria-hidden="true">AB</span>
+              <span class="who">
+                <span class="who-name" th:text="${a.name}">Name</span>
+                <span class="who-email" th:text="${a.email}">email</span>
+              </span>
+              <span class="role-badge" th:classappend="${a.role == 'SPECIALIST'} ? 'role-specialist' : 'role-applicant'">
+                <svg th:if="${a.role == 'SPECIALIST'}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.4 3 8.3 7 9.5 4-1.2 7-5.1 7-9.5V6l-7-3z"/></svg>
+                <svg th:unless="${a.role == 'SPECIALIST'}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+                <span th:text="${a.role == 'SPECIALIST'} ? 'Specialist' : 'Applicant'">Role</span>
+              </span>
+            </li>
+          </ul>
+          <p class="demo-panel-note">Demo mode — picking an account fills in the email and password.
+            Anyone who can reach this site can do the same.</p>
+        </div>
       </div>
       <div class="field">
         <label for="password">Password</label>
         <input type="password" id="password" name="password" autocomplete="current-password" required>
       </div>
-      <button class="btn btn-primary" type="submit">Sign in</button>
+      <button class="btn btn-primary" type="submit" id="sign-in">Sign in</button>
     </form>
+
+    <noscript th:unless="${#lists.isEmpty(demoAccounts)}">
+      <form th:action="@{/login/demo}" method="post" class="demo-login">
+        <div class="field">
+          <label for="demo-email">Demo account (without JavaScript)</label>
+          <select id="demo-email" name="email" required>
+            <option th:each="a : ${demoAccounts}" th:value="${a.email}"
+                    th:text="${a.name} + ' — ' + ${a.email}"></option>
+          </select>
+        </div>
+        <button class="btn" type="submit">Sign in as selected</button>
+      </form>
+    </noscript>
 
   </div>
 </div>

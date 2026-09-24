@@ -38,6 +38,17 @@ public class ViewFormat {
         return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 
+    /** "Specialist Two" → "ST"; "labeling" → "L". */
+    public String initials(String name) {
+        if (name == null || name.isBlank()) {
+            return "?";
+        }
+        String[] parts = name.trim().split("\\s+");
+        String first = parts[0].substring(0, 1);
+        String last = parts.length > 1 ? parts[parts.length - 1].substring(0, 1) : "";
+        return (first + last).toUpperCase(Locale.ROOT);
+    }
+
     public String deadline(Deadlines.DeadlineInfo info) {
         if (info == null) {
             return "";

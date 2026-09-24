@@ -51,7 +51,7 @@ public class SecurityConfig {
     SecurityFilterChain webChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/css/**", "/js/**", "/favicon.svg", "/robots.txt",
+                        .requestMatchers("/login", "/login/demo", "/css/**", "/js/**", "/favicon.svg", "/robots.txt",
                                 "/actuator/health", "/error").permitAll()
                         .requestMatchers("/settings/**", "/applicants/**").hasRole("SPECIALIST")
                         .requestMatchers("/submit/**").hasRole("APPLICANT")
