@@ -68,6 +68,7 @@ public class UserProvisioner implements ApplicationRunner {
     @Transactional
     public void run(ApplicationArguments args) {
         if (config == null || config.isBlank()) {
+            log.info("APP_USERS is not set on this service — no additional accounts provisioned.");
             return;
         }
         List<Entry> entries;
