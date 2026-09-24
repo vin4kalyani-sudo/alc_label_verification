@@ -19,6 +19,7 @@ The application should be deployable on low-cost platforms such as Railway. Rail
   - 20 web threads, 4 DB connections
   - database storage, one OCR job at a time
 - **Platform URL support:** `DatabaseUrlEnvironmentPostProcessor` converts `postgres(ql)://` URLs to JDBC and credentials; explicit variables win.
+- **Railway detection:** when Railway's injected variables are present, the `railway` profile is activated if no profile was chosen. A missing `DATABASE_URL` stops startup with an actionable message. This came from a first deployment in which both variables were missing and the app kept retrying `localhost:5432`.
 - **`railway.json`:** Dockerfile build, `/actuator/health` check, restart on failure, sleep when idle.
 
 ## Consequences

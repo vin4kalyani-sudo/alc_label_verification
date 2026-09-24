@@ -4,7 +4,7 @@ The full catalogue of functional, security, and non-functional test scenarios.
 
 **How each scenario is verified**
 
-- **Auto** means an automated test covers it. The *Evidence* column names the test class. All 93 tests pass with `./mvnw test`.
+- **Auto** means an automated test covers it. The *Evidence* column names the test class. All 96 tests pass with `./mvnw test`.
 - **HTTP** means it was checked against a running instance with curl, using the same session, CSRF, and multipart flow a browser uses.
 - **Manual** means it needs a person at a browser (visual and interaction checks). The *Result* column says "Not run" until someone executes it.
 
@@ -202,7 +202,9 @@ The full catalogue of functional, security, and non-functional test scenarios.
 | DEP-03 | Platform database URL | `DATABASE_URL=postgresql://user:p%40ss@host:5432/db` | JDBC URL, user and decoded password set; explicit variables win; JDBC URLs untouched | Auto | `DatabaseUrlEnvironmentPostProcessorTest` |
 | DEP-04 | Fits 512 MB | Run with the Dockerfile `JAVA_OPTS`; 4 pre-fills, 4 + 8 concurrent submissions | Peak memory < 512 MB; all verdicts correct; health UP | HTTP | Pass (peak 402 MB, macOS) |
 | DEP-05 | Startup time under constrained flags | Start the jar with the Dockerfile `JAVA_OPTS` | Started, health UP | HTTP | Pass (3.5 s) |
-| DEP-06 | Docker image builds | `docker build .` | Image builds; Tesseract present | Manual | Not run (Docker not installed on the test machine) |
+| DEP-06 | Docker image builds | `docker build .` / Railway build | Image builds; app starts as non-root with Java 21 | Manual | Pass (Railway build log: Java 21.0.12, `/app/app.jar`, `appuser`) |
+| DEP-10 | Missing `DATABASE_URL` on Railway | Start with a Railway marker variable and no `DATABASE_URL` | Stops at once with "DATABASE_URL is not set on this Railway service" and the fix | Auto + HTTP | `DatabaseUrlEnvironmentPostProcessorTest`; jar run: pass |
+| DEP-11 | Railway profile switches on automatically | Railway marker + `DATABASE_URL`, no profile | "profile is active: railway"; redirects use `https` behind proxy headers | Auto + HTTP | `DatabaseUrlEnvironmentPostProcessorTest`; jar run: pass |
 | DEP-07 | Railway deploy end to end | Follow [deploy-railway.md](deploy-railway.md) | Health UP over HTTPS; submission works; image displays; memory < 512 MB in Railway metrics | Manual | Not run |
 | DEP-08 | HTTPS redirects behind proxy | Sign in on the Railway domain | Redirects stay on `https://`; session cookie `Secure` | Manual | Not run |
 | DEP-09 | Sleep and wake | Leave idle until sleeping, then open | First request waits for startup, then works | Manual | Not run |
@@ -229,8 +231,8 @@ For manual scenarios, start the demo profile, read the bootstrap password from t
 
 Some scenarios are both automated and verified live, so the columns overlap.
 
-| Area | Scenarios | Automated | Verified live (HTTP / browser) | Not yet run |
-|------|-----------|-----------|--------------------------------|-------------|
+| Area | Scenarios | Automated | Verified live (HTTP / browser / Railway) | Not yet run |
+|------|-----------|-----------|------------------------------------------|-------------|
 | Authentication | 10 | 3 | 3 | 4 |
 | Authorization | 11 | 8 | 0 | 3 |
 | Pre-fill | 15 | 9 | 2 | 6 |
@@ -241,5 +243,5 @@ Some scenarios are both automated and verified live, so the columns overlap.
 | Batch | 6 | 3 | 0 | 3 |
 | Settings / dashboard / applicants | 7 | 4 | 0 | 3 |
 | Security / non-functional | 10 | 0 | 4 | 6 |
-| Deployment | 9 | 3 | 2 | 4 |
-| **Total** | **127** | **76** | **13** | **40** |
+| Deployment | 11 | 5 | 5 | 3 |
+| **Total** | **129** | **78** | **16** | **39** |

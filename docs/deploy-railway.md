@@ -83,8 +83,8 @@ In the app service's **Variables** tab:
 
 | Variable | Value |
 |---|---|
-| `DATABASE_URL` | Reference to the Postgres service's `DATABASE_URL` (Railway's variable-reference picker). The private-network URL is preferred. |
-| `SPRING_PROFILES_ACTIVE` | `railway` |
+| `DATABASE_URL` | **Required.** A reference to the Postgres service's `DATABASE_URL`, set on the **app** service. In **New Variable**, use the reference picker; it appears as `${{Postgres.DATABASE_URL}}` (use your Postgres service's actual name). |
+| `SPRING_PROFILES_ACTIVE` | Optional. On Railway the `railway` profile is switched on automatically when no profile is set. |
 | `APP_SEED_PASSWORD` | A long random password for the two bootstrap accounts |
 | `APP_SEED_SPECIALIST_EMAIL`, `APP_SEED_APPLICANT_EMAIL` | Optional: your own addresses |
 | `GOOGLE_VISION_API_KEY`, `OPENAI_API_KEY` | Optional: enable the cloud pipeline |
@@ -92,6 +92,8 @@ In the app service's **Variables** tab:
 Do **not** set `PORT`; Railway injects it and the app reads it.
 
 `DATABASE_URL` in `postgresql://…` form is converted automatically. You can instead set a JDBC URL plus `DATABASE_USERNAME` and `DATABASE_PASSWORD`.
+
+If `DATABASE_URL` is missing, the app stops at startup with the message *"DATABASE_URL is not set on this Railway service…"* and the fix, instead of trying to reach `localhost:5432`.
 
 ### 4. Expose it
 
@@ -135,8 +137,10 @@ Limits of this measurement:
 
 | Symptom | Likely cause / fix |
 |---|---|
-| Health check fails, logs show a database connection error | `DATABASE_URL` is not set on the app service, or references the wrong service |
+| Log shows `No active profile set` and `Connection to localhost:5432 refused` | Build from before automatic Railway detection, with `DATABASE_URL` not set on the **app** service. Add the variable as a reference to the Postgres service, or redeploy the current code to get the explicit message |
+| Log shows `DATABASE_URL is not set on this Railway service` | Add `DATABASE_URL` on the app service as a reference to the Postgres service's `DATABASE_URL` |
+| Database connection refused or unknown host with `DATABASE_URL` set | The reference points to the wrong service name, or PostgreSQL is still starting (it retries on restart) |
 | Restarts with `OutOfMemoryError` | Too much concurrent load for 0.5 GB. Keep `OCR_MAX_CONCURRENT=1`, or move to Hobby and raise the heap |
-| Login redirects to `http://` | `SPRING_PROFILES_ACTIVE` is not `railway`, so forwarded headers are not trusted |
+| Login redirects to `http://` | A different profile was forced through `SPRING_PROFILES_ACTIVE`. Include `railway`, e.g. `railway,custom` |
 | "The label could not be read automatically" | Tesseract missing from the image. Build from the repository `Dockerfile`, not a buildpack |
 | Volume full | Images live in the database. Delete old demo data, or move to Hobby with filesystem or object storage |

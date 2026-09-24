@@ -36,4 +36,30 @@ class DatabaseUrlEnvironmentPostProcessorTest {
         assertThat(DatabaseUrlEnvironmentPostProcessor.convert("jdbc:postgresql://h:5432/d", null, null)).isEmpty();
         assertThat(DatabaseUrlEnvironmentPostProcessor.convert(null, null, null)).isEmpty();
     }
+
+    @Test
+    void railwayWithoutDatabaseUrlFailsWithActionableMessage() {
+        Map<String, String> env = Map.of("RAILWAY_ENVIRONMENT_NAME", "production");
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> DatabaseUrlEnvironmentPostProcessor.platformDefaults(env::get))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("DATABASE_URL is not set on this Railway service")
+                .hasMessageContaining("Variables");
+    }
+
+    @Test
+    void railwayActivatesItsProfileUnlessOneIsChosen() {
+        assertThat(DatabaseUrlEnvironmentPostProcessor.platformDefaults(
+                Map.of("RAILWAY_PROJECT_ID", "p", "DATABASE_URL", "postgresql://u:p@h/d")::get))
+                .containsEntry("spring.profiles.active", "railway");
+        assertThat(DatabaseUrlEnvironmentPostProcessor.platformDefaults(
+                Map.of("RAILWAY_PROJECT_ID", "p", "DATABASE_URL", "postgresql://u:p@h/d",
+                        "SPRING_PROFILES_ACTIVE", "custom")::get))
+                .isEmpty();
+    }
+
+    @Test
+    void offRailwayNothingChanges() {
+        assertThat(DatabaseUrlEnvironmentPostProcessor.platformDefaults(Map.<String, String>of()::get)).isEmpty();
+    }
 }
