@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Sign in')}"></head>
+<body>
+<div class="login-wrap">
+  <div class="card login-card">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.2 5.1 13.4 12 15 6.9-1.6 12-7.8 12-15V7L16 2z" fill="currentColor"/><path d="m11 16 3.5 3.5L21.5 12" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span th:text="${appName}">Label Verification</span>
+    </div>
+    <p class="tagline" th:text="${appTagline}">COLA label compliance review</p>
+
+    <div class="alert alert-bad" role="alert" th:if="${param.error}">Invalid email or password.</div>
+    <div class="alert alert-info" role="status" th:if="${param.logout}">You have been signed out.</div>
+
+    <form th:action="@{/login}" method="post">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" autocomplete="username" required autofocus>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn btn-primary" type="submit">Sign in</button>
+    </form>
+
+  </div>
+</div>
+</body>
+</html>

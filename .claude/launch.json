@@ -1,0 +1,16 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "label-verification-demo",
+      "runtimeExecutable": "./mvnw",
+      "runtimeArgs": [
+        "-q",
+        "spring-boot:run",
+        "-Dspring-boot.run.profiles=demo"
+      ],
+      "port": 8080,
+      "autoPort": true
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+target/
+data/
+.git/
+.idea/
+.env
+docs/
+test-labels/
