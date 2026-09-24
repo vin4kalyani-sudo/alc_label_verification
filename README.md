@@ -120,7 +120,7 @@ flowchart LR
 | Database | PostgreSQL 17 (H2 for demo and tests), Flyway migrations |
 | OCR | Tesseract 5 via Tess4J (local); Google Cloud Vision REST (cloud) |
 | Classification | OpenAI Chat Completions with strict JSON schema (cloud) |
-| Testing | JUnit 5, AssertJ, Spring MockMvc, spring-security-test (96 tests, incl. real-OCR end-to-end) |
+| Testing | JUnit 5, AssertJ, Spring MockMvc, spring-security-test (102 tests, incl. real-OCR end-to-end) |
 
 ## Project layout
 
@@ -181,6 +181,7 @@ All variables are listed in [.env.example](.env.example). No credential has a de
 |----------|---------|
 | `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` | PostgreSQL connection |
 | `APP_SEED`, `APP_SEED_PASSWORD` | Bootstrap accounts on an empty database; set `APP_SEED=false` in production |
+| `APP_USERS` | Additional specialists and applicants as JSON, with bcrypt hashes preferred ([docs/user-accounts.md](docs/user-accounts.md)) |
 | `APP_SEED_SPECIALIST_EMAIL`, `APP_SEED_APPLICANT_EMAIL` | Bootstrap account emails (defaults use `example.gov` / `example.com`) |
 | `TESSDATA_PREFIX`, `TESSERACT_LIBRARY_PATH` | Tesseract locations, when auto-detection fails |
 | `GOOGLE_VISION_API_KEY` + `OPENAI_API_KEY` | Enable the cloud pipeline (both required) |
@@ -226,6 +227,7 @@ Stateless HTTP Basic. Full reference in [docs/api.md](docs/api.md).
 | [docs/adr/](docs/adr/README.md) | Architecture decision records |
 | [docs/ai-pipelines.md](docs/ai-pipelines.md) | OCR, field search, comparison engine, measured results |
 | [docs/api.md](docs/api.md) | REST reference |
+| [docs/user-accounts.md](docs/user-accounts.md) | Creating specialist and applicant accounts |
 | [docs/user-flows.md](docs/user-flows.md) | Applicant and specialist workflows, edge cases |
-| [docs/test-scenarios.md](docs/test-scenarios.md) | 129 test scenarios with automated and manual evidence |
+| [docs/test-scenarios.md](docs/test-scenarios.md) | 133 test scenarios with automated and manual evidence |
 | [docs/production.md](docs/production.md) | Production-readiness checklist and roadmap |

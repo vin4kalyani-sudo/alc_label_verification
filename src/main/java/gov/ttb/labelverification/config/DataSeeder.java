@@ -53,6 +53,7 @@ public class DataSeeder implements ApplicationRunner {
     @Transactional
     public void run(ApplicationArguments args) {
         if (users.count() > 0) {
+            resetBootstrapPasswordsIfRequested();
             return;
         }
         String password = seed.password();
@@ -94,5 +95,33 @@ public class DataSeeder implements ApplicationRunner {
         settings.write(SettingsService.PIPELINE_MODEL, "local");
         settings.write(SettingsService.APPROVAL_THRESHOLD, SettingsService.DEFAULT_APPROVAL_THRESHOLD);
         settings.write(SettingsService.SLA_TARGETS, SettingsService.SlaTargets.DEFAULT);
+    }
+
+    /**
+     * Recovery for lost bootstrap credentials: with {@code APP_SEED_RESET_PASSWORD=true} and a
+     * non-blank {@code APP_SEED_PASSWORD}, the bootstrap specialist and applicant get that password.
+     * Remove the flag after signing in; it re-applies on every restart while set.
+     */
+    void resetBootstrapPasswordsIfRequested() {
+        if (!seed.resetPassword()) {
+            return;
+        }
+        if (seed.password() == null || seed.password().isBlank()) {
+            log.warn("APP_SEED_RESET_PASSWORD is set but APP_SEED_PASSWORD is empty — nothing was reset.");
+            return;
+        }
+        String hash = encoder.encode(seed.password());
+        int count = 0;
+        for (String email : new String[]{seed.specialistEmail(), seed.applicantEmail()}) {
+            var user = users.findByEmailIgnoreCase(email);
+            if (user.isPresent()) {
+                user.get().changePasswordHash(hash);
+                count++;
+            } else {
+                log.warn("Bootstrap account {} not found — not reset.", email);
+            }
+        }
+        log.warn("Reset the password of {} bootstrap account(s) to APP_SEED_PASSWORD. "
+                + "Remove APP_SEED_RESET_PASSWORD now.", count);
     }
 }

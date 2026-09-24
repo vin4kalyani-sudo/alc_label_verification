@@ -7,7 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import org.apache.commons.logging.Log;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.logging.DeferredLogFactory;
 import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
@@ -38,8 +40,15 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         return ConfigDataEnvironmentPostProcessor.ORDER - 1;
     }
 
+    private final Log log;
+
+    public DatabaseUrlEnvironmentPostProcessor(DeferredLogFactory logFactory) {
+        this.log = logFactory.getLog(DatabaseUrlEnvironmentPostProcessor.class);
+    }
+
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication application) {
+        log.info(diagnostics(env::getProperty));
         Map<String, Object> props = new HashMap<>(platformDefaults(env::getProperty));
         props.putAll(convert(env.getProperty("DATABASE_URL"),
                 env.getProperty("DATABASE_USERNAME"), env.getProperty("DATABASE_PASSWORD")));
@@ -62,12 +71,38 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
             throw new IllegalStateException("""
                     DATABASE_URL is not set on this Railway service, so there is no database to connect to.
                     Fix: open this service → Variables → New Variable → name DATABASE_URL, value: a reference \
-                    to your PostgreSQL service's DATABASE_URL (e.g. ${{Postgres.DATABASE_URL}}). \
-                    See docs/deploy-railway.md.""");
+                    to your PostgreSQL service's DATABASE_URL (e.g. ${{Postgres.DATABASE_URL}}), then Deploy \
+                    the staged change. See docs/deploy-railway.md.
+                    """ + diagnostics(env));
         }
         boolean profileChosen = !isBlank(env.apply("spring.profiles.active"))
                 || !isBlank(env.apply("SPRING_PROFILES_ACTIVE"));
         return profileChosen ? Map.of() : Map.of("spring.profiles.active", "railway");
+    }
+
+    /**
+     * One startup line for diagnosing hosting configuration. Never prints credentials:
+     * only the scheme, host, port and database of {@code DATABASE_URL}.
+     */
+    static String diagnostics(Function<String, String> env) {
+        boolean onRailway = RAILWAY_MARKERS.stream().anyMatch(k -> !isBlank(env.apply(k)));
+        String url = env.apply("DATABASE_URL");
+        String db;
+        if (isBlank(url)) {
+            db = "not set";
+        } else {
+            try {
+                URI uri = URI.create(url.startsWith("jdbc:") ? url.substring(5) : url);
+                db = "set (" + uri.getScheme() + "://" + (uri.getHost() == null ? "?" : uri.getHost())
+                        + (uri.getPort() > 0 ? ":" + uri.getPort() : "") + (uri.getPath() == null ? "" : uri.getPath()) + ")";
+            } catch (IllegalArgumentException e) {
+                db = "set (unparseable)";
+            }
+        }
+        String profile = !isBlank(env.apply("SPRING_PROFILES_ACTIVE")) ? env.apply("SPRING_PROFILES_ACTIVE")
+                : !isBlank(env.apply("spring.profiles.active")) ? env.apply("spring.profiles.active")
+                : onRailway ? "railway (automatic)" : "default";
+        return "Hosting check: railway=" + onRailway + ", DATABASE_URL=" + db + ", profile=" + profile;
     }
 
     static Map<String, Object> convert(String url, String explicitUser, String explicitPassword) {

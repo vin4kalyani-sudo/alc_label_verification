@@ -87,6 +87,7 @@ In the app service's **Variables** tab:
 | `SPRING_PROFILES_ACTIVE` | Optional. On Railway the `railway` profile is switched on automatically when no profile is set. |
 | `APP_SEED_PASSWORD` | A long random password for the two bootstrap accounts |
 | `APP_SEED_SPECIALIST_EMAIL`, `APP_SEED_APPLICANT_EMAIL` | Optional: your own addresses |
+| `APP_USERS` | Optional: more specialists and applicants, as a JSON array with bcrypt hashes ([user-accounts.md](user-accounts.md)) |
 | `GOOGLE_VISION_API_KEY`, `OPENAI_API_KEY` | Optional: enable the cloud pipeline |
 
 Do **not** set `PORT`; Railway injects it and the app reads it.
@@ -105,6 +106,14 @@ Sign in with the specialist email and `APP_SEED_PASSWORD`. Then, so a later empt
 
 1. Set `APP_SEED=false`.
 2. Redeploy.
+
+### Lost or unknown bootstrap password
+
+The accounts are created **once**, on the first successful start. Changing `APP_SEED_PASSWORD` later does not change them. To reset:
+
+1. Set `APP_SEED_PASSWORD` to a new strong password, and set `APP_SEED_RESET_PASSWORD=true`. `APP_SEED` must not be `false`.
+2. Deploy. The log shows *"Reset the password of 2 bootstrap account(s)…"*.
+3. Sign in, then **remove** `APP_SEED_RESET_PASSWORD` and deploy again. While it is set, the reset re-applies on every restart.
 
 ## Verification
 
@@ -134,6 +143,14 @@ Limits of this measurement:
 - No Docker image was built during this check, because Docker was not installed on the machine used. The Dockerfile is exercised on the first Railway build.
 
 ## Troubleshooting
+
+Every startup logs one line that shows what the app received, without credentials:
+
+```
+Hosting check: railway=true, DATABASE_URL=set (postgresql://postgres.railway.internal:5432/railway), profile=railway (automatic)
+```
+
+If it says `DATABASE_URL=not set`, the variable is missing on the **app** service, still staged (click **Deploy**), or references a service name that doesn't exist. If the line is absent, the deployment is running an older build.
 
 | Symptom | Likely cause / fix |
 |---|---|

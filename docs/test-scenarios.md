@@ -4,7 +4,7 @@ The full catalogue of functional, security, and non-functional test scenarios.
 
 **How each scenario is verified**
 
-- **Auto** means an automated test covers it. The *Evidence* column names the test class. All 96 tests pass with `./mvnw test`.
+- **Auto** means an automated test covers it. The *Evidence* column names the test class. All 102 tests pass with `./mvnw test`.
 - **HTTP** means it was checked against a running instance with curl, using the same session, CSRF, and multipart flow a browser uses.
 - **Manual** means it needs a person at a browser (visual and interaction checks). The *Result* column says "Not run" until someone executes it.
 
@@ -38,6 +38,10 @@ The full catalogue of functional, security, and non-functional test scenarios.
 | AUTH-07 | Bootstrap password from environment | Start with `APP_SEED_PASSWORD` set | Accounts use that password; the log does not print it | Manual | Not run |
 | AUTH-08 | Generated bootstrap password | Start without `APP_SEED_PASSWORD` on an empty DB | Random password logged once at WARN | HTTP | Pass (log checked) |
 | AUTH-09 | Seeding disabled | Start with `APP_SEED=false` on an empty DB | No accounts created | Manual | Not run |
+| AUTH-11 | Accounts from `APP_USERS` (hashes and plain) | Start with 2 specialists and 4 applicants declared | All created with the right role and company; each can sign in; applicants get 403 on settings | Auto + HTTP | `UserProvisionerIntegrationTest`; jar run with real hashes: pass (6/6) |
+| AUTH-12 | `APP_USERS` invalid entries | Weak password, unknown role, bad email | Those entries skipped with a log line; others still created | Auto | `UserProvisionerIntegrationTest` |
+| AUTH-13 | `APP_USERS` idempotent, password rotation | Restart with the same value; change one password | No duplicates; only the changed password is updated | Auto | `UserProvisionerIntegrationTest` |
+| AUTH-14 | Bootstrap password reset | `APP_SEED_RESET_PASSWORD=true` with a new `APP_SEED_PASSWORD` | Both bootstrap accounts get the new password; nothing happens without the flag or with an empty password | Auto | `DataSeederResetTest` |
 | AUTH-10 | Login page has no credentials | View `/login` | No demo accounts or passwords shown | Manual | Pass (screenshot) |
 
 ## 2. Authorization and data isolation
@@ -233,7 +237,7 @@ Some scenarios are both automated and verified live, so the columns overlap.
 
 | Area | Scenarios | Automated | Verified live (HTTP / browser / Railway) | Not yet run |
 |------|-----------|-----------|------------------------------------------|-------------|
-| Authentication | 10 | 3 | 3 | 4 |
+| Authentication | 14 | 7 | 4 | 4 |
 | Authorization | 11 | 8 | 0 | 3 |
 | Pre-fill | 15 | 9 | 2 | 6 |
 | Submission | 14 | 6 | 1 | 7 |
@@ -244,4 +248,4 @@ Some scenarios are both automated and verified live, so the columns overlap.
 | Settings / dashboard / applicants | 7 | 4 | 0 | 3 |
 | Security / non-functional | 10 | 0 | 4 | 6 |
 | Deployment | 11 | 5 | 5 | 3 |
-| **Total** | **129** | **78** | **16** | **39** |
+| **Total** | **133** | **82** | **17** | **39** |

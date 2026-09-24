@@ -62,4 +62,18 @@ class DatabaseUrlEnvironmentPostProcessorTest {
     void offRailwayNothingChanges() {
         assertThat(DatabaseUrlEnvironmentPostProcessor.platformDefaults(Map.<String, String>of()::get)).isEmpty();
     }
+
+    @Test
+    void diagnosticsNeverPrintCredentials() {
+        String line = DatabaseUrlEnvironmentPostProcessor.diagnostics(Map.of(
+                "RAILWAY_PROJECT_ID", "p",
+                "DATABASE_URL", "postgresql://user:SuperSecret@postgres.railway.internal:5432/railway")::get);
+        assertThat(line)
+                .contains("railway=true")
+                .contains("postgresql://postgres.railway.internal:5432/railway")
+                .contains("railway (automatic)")
+                .doesNotContain("SuperSecret").doesNotContain("user");
+        assertThat(DatabaseUrlEnvironmentPostProcessor.diagnostics(Map.<String, String>of()::get))
+                .isEqualTo("Hosting check: railway=false, DATABASE_URL=not set, profile=default");
+    }
 }

@@ -27,6 +27,7 @@ public record AppProperties(
      */
     public record Seed(@DefaultValue("true") boolean enabled,
                        String password,
+                       @DefaultValue("false") boolean resetPassword,
                        @DefaultValue("specialist@example.gov") String specialistEmail,
                        @DefaultValue("applicant@example.com") String applicantEmail,
                        @DefaultValue("Sample Distilling Co.") String applicantCompany) {

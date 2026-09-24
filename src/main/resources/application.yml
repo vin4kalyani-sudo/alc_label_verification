@@ -55,9 +55,13 @@ app:
   seed:
     enabled: ${APP_SEED:true}
     password: ${APP_SEED_PASSWORD:}
+    # One-time recovery: set to true to reset the bootstrap accounts to APP_SEED_PASSWORD, then remove.
+    reset-password: ${APP_SEED_RESET_PASSWORD:false}
     specialist-email: ${APP_SEED_SPECIALIST_EMAIL:specialist@example.gov}
     applicant-email: ${APP_SEED_APPLICANT_EMAIL:applicant@example.com}
     applicant-company: ${APP_SEED_APPLICANT_COMPANY:Sample Distilling Co.}
+  # Extra accounts, as a JSON array (see docs/user-accounts.md). Prefer bcrypt hashes over plain passwords.
+  users: ${APP_USERS:}
   pipeline:
     timeout: 60s
   # Local OCR (Tesseract via Tess4J). Blank paths are auto-detected.

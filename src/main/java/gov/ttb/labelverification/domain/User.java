@@ -50,6 +50,10 @@ public class User extends BaseEntity {
         return email;
     }
 
+    public void changePasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
     public String getPasswordHash() {
         return passwordHash;
     }
