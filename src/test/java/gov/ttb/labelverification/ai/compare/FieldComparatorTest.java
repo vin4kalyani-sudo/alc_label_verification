@@ -63,6 +63,12 @@ class FieldComparatorTest {
             assertThat(r.reasoning()).contains("expected 45%, found 40%");
         }
 
+        @Test
+        void halfAPointAlcoholDifferenceIsMismatch() {
+            assertThat(FieldComparator.compare(FieldName.ALCOHOL_CONTENT, "6.0% Alc./Vol.", "5.5% Alc./Vol.").status())
+                    .isEqualTo(ItemStatus.MISMATCH);
+        }
+
         @ParameterizedTest
         @CsvSource(delimiter = '|', value = {
                 "750 mL | 750ml",

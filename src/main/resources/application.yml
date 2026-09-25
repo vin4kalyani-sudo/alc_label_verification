@@ -24,6 +24,12 @@ spring:
       max-request-size: 60MB
   thymeleaf:
     cache: true
+  session:
+    # Sessions live in the database (tables created by Flyway V3), so a restart or sleep/wake
+    # of the app does not sign users out.
+    jdbc:
+      initialize-schema: never
+      cleanup-cron: "0 */5 * * * *"
 
 server:
   port: ${PORT:8080}

@@ -11,6 +11,16 @@
       ],
       "port": 8080,
       "autoPort": true
+    },
+    {
+      "name": "demo-login-check",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "APP_DEMO_LOGIN=true APP_USERS=\"$(cat /private/tmp/claude-501/-Users-purna-ttb/8e2b692a-6e56-40ac-a17e-320e68d445eb/scratchpad/gen/APP_USERS.base64.txt)\" exec java -jar target/label-verification-0.1.0-SNAPSHOT.jar --spring.profiles.active=demo --server.port=8095"
+      ],
+      "port": 8095,
+      "autoPort": false
     }
   ]
 }

@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head th:replace="~{fragments/layout :: head('Sign in')}"></head>
-<body>
+<body class="login-page">
 <div class="login-wrap">
-  <div class="card login-card">
-    <div class="brand">
-      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.2 5.1 13.4 12 15 6.9-1.6 12-7.8 12-15V7L16 2z" fill="currentColor"/><path d="m11 16 3.5 3.5L21.5 12" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span th:text="${appName}">Label Verification</span>
+  <div class="login-glow" aria-hidden="true"></div>
+  <div class="login-card">
+    <div class="login-stripe" aria-hidden="true"></div>
+    <div class="login-brand">
+      <div class="login-mark">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 5 7.5v7.3c0 6.6 4.6 12.3 11 13.9 6.4-1.6 11-7.3 11-13.9V7.5L16 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m11.5 16 3.2 3.2 6.3-6.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h1 class="login-title" th:text="${appName}">TTB Label Verification</h1>
+      <p class="login-tagline" th:text="${appTagline}">COLA label compliance review</p>
     </div>
-    <p class="tagline" th:text="${appTagline}">COLA label compliance review</p>
+    <div class="login-sep" aria-hidden="true"></div>
 
     <div class="alert alert-bad" role="alert" th:if="${param.error}">Invalid email or password.</div>
     <div class="alert alert-info" role="status" th:if="${param.logout}">You have been signed out.</div>
@@ -49,9 +54,14 @@
       </div>
       <div class="field">
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" autocomplete="current-password" required>
+        <input type="password" id="password" name="password" autocomplete="current-password" required
+               placeholder="Enter your password">
       </div>
-      <button class="btn btn-primary" type="submit" id="sign-in">Sign in</button>
+      <button class="btn btn-primary login-submit" type="submit" id="sign-in">
+        <span class="login-submit-label">Sign in</span>
+        <svg class="login-submit-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <span class="spinner" aria-hidden="true"></span>
+      </button>
     </form>
 
     <noscript th:unless="${#lists.isEmpty(demoAccounts)}">
@@ -67,6 +77,7 @@
       </form>
     </noscript>
 
+    <p class="login-footer">Authorized personnel only</p>
   </div>
 </div>
 </body>

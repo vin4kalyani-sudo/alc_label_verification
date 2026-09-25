@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mock.web.MockHttpSession;
+import jakarta.servlet.http.Cookie;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -60,13 +60,14 @@ class DemoLoginIntegrationTest {
 
         @Test
         void signsInAsTheSelectedAccount() throws Exception {
-            MockHttpSession session = (MockHttpSession) mvc.perform(post("/login/demo")
+            // Sessions are stored in the database; the browser only holds the SESSION cookie.
+            Cookie session = mvc.perform(post("/login/demo")
                             .param("email", "specialist@example.gov").with(csrf()))
                     .andExpect(redirectedUrl("/"))
-                    .andReturn().getRequest().getSession();
-            mvc.perform(get("/").session(session)).andExpect(status().isOk())
+                    .andReturn().getResponse().getCookie("SESSION");
+            mvc.perform(get("/").cookie(session)).andExpect(status().isOk())
                     .andExpect(content().string(containsString("Review dashboard")));
-            mvc.perform(get("/settings").session(session)).andExpect(status().isOk());
+            mvc.perform(get("/settings").cookie(session)).andExpect(status().isOk());
         }
 
         @Test

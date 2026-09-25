@@ -83,8 +83,13 @@ public final class FieldComparator {
                 }
                 return match(85, name + " matches case-insensitively; the required prefix is in capitals.");
             }
+            // Bigram similarity alone is not enough: a warning missing clause (2) still scores ~0.8+.
             double similarity = fuzzyMatch(normExpected, normExtracted).similarity();
-            if (similarity >= 0.9) {
+            if (similarity >= 0.9 && OcrTextSearch.allHealthWarningPhrasesPresent(normExtracted)) {
+                if (!OcrTextSearch.prefixInCapitals(normExtracted)) {
+                    return mismatch(90, name + " text is correct but the \"GOVERNMENT WARNING:\" prefix is not "
+                            + "in capital letters (27 CFR 16.22).");
+                }
                 return match((int) Math.round(similarity * 80), name + " is very similar ("
                         + Math.round(similarity * 100) + "%). Minor OCR discrepancies detected.");
             }
@@ -126,8 +131,8 @@ public final class FieldComparator {
                 if (exp == null || ext == null) {
                     return compareFuzzy(name, expected, extracted);
                 }
-                // 0.5% tolerance for rounding differences
-                if (Math.abs(exp - ext) <= 0.5) {
+                // Under half a point is rounding ("40%" vs "40.4%"); half a point or more is a different statement
+                if (Math.abs(exp - ext) < 0.5) {
                     return match(exp.equals(ext) ? 100 : 90, "Alcohol content matches: expected "
                             + fmt(exp) + "%, found " + fmt(ext) + "%.");
                 }

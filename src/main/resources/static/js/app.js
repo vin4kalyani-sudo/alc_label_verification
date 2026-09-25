@@ -176,8 +176,11 @@
       passwordInput.classList.add('prefilled');
       loginForm.setAttribute('action', demoAction);
       close();
+      // Both fields are filled: focus Sign in so pressing Enter signs in.
+      signIn.classList.add('ready');
       signIn.focus();
     };
+    signIn.addEventListener('blur', function () { signIn.classList.remove('ready'); });
 
     options.forEach(function (o) {
       // mousedown (not click) so the email field's blur doesn't close the panel first
@@ -211,7 +214,25 @@
       } else if (e.key === 'Escape' && !panel.hidden) {
         e.preventDefault();
         close();
+      } else if (e.key === 'Enter' && panel.hidden) {
+        // With the list closed, Enter moves on to the password instead of submitting.
+        e.preventDefault();
+        passwordInput.focus();
       }
+    });
+  }
+
+  // Login: show a spinner while signing in and prevent double submission.
+  var loginFormForBusy = document.getElementById('login-form');
+  var loginSubmit = document.getElementById('sign-in');
+  if (loginFormForBusy && loginSubmit) {
+    loginFormForBusy.addEventListener('submit', function () {
+      loginSubmit.classList.remove('ready');
+      loginSubmit.classList.add('busy');
+      loginSubmit.setAttribute('aria-busy', 'true');
+      var label = loginSubmit.querySelector('.login-submit-label');
+      if (label) { label.textContent = 'Signing in…'; }
+      window.setTimeout(function () { loginSubmit.disabled = true; }, 0);
     });
   }
 })();
