@@ -6,7 +6,7 @@ flowchart TB
 
     subgraph local["Local pipeline — free, on-host"]
         L1["Tesseract OCR per image<br/>grayscale · upscale &lt;1024px to 2048px<br/>PSM 11 (sparse) + PSM 6 (block), merged lines"]
-        L2["OcrTextSearch per expected field<br/>1 exact → 2 punctuation-insensitive →<br/>3 GOVERNMENT WARNING landmark + ≥4/6 body phrases →<br/>4 sliding window (Dice ≥ .75) → 5 scattered words<br/>numeric fields keep the OCR text"]
+        L2["OcrTextSearch per expected field<br/>1 exact, whole words/numbers →<br/>2 GOVERNMENT WARNING landmark + all 6 body phrases →<br/>3 space/punctuation-insensitive →<br/>4 sliding window (≥ .9 noise; .75–.9 label text) → 5 scattered words<br/>numeric fields keep the OCR text"]
         L1 --> L2
     end
 

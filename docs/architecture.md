@@ -237,7 +237,7 @@ flowchart TB
 
     subgraph local["Local pipeline — free, on-host"]
         L1["Tesseract OCR per image<br/>grayscale · upscale &lt;1024px to 2048px<br/>PSM 11 (sparse) + PSM 6 (block), merged lines"]
-        L2["OcrTextSearch per expected field<br/>1 exact → 2 punctuation-insensitive →<br/>3 GOVERNMENT WARNING landmark + ≥4/6 body phrases →<br/>4 sliding window (Dice ≥ .75) → 5 scattered words<br/>numeric fields keep the OCR text"]
+        L2["OcrTextSearch per expected field<br/>1 exact, whole words/numbers →<br/>2 GOVERNMENT WARNING landmark + all 6 body phrases →<br/>3 space/punctuation-insensitive →<br/>4 sliding window (≥ .9 noise; .75–.9 label text) → 5 scattered words<br/>numeric fields keep the OCR text"]
         L1 --> L2
     end
 
@@ -443,7 +443,7 @@ flowchart LR
 
 | Layer | Mechanism |
 |-------|-----------|
-| Authentication | Form login + session (UI); stateless HTTP Basic (API) ([ADR-0006](adr/0006-separate-security-filter-chains-for-api-and-ui.md)). Passwords are hashed with bcrypt. |
+| Authentication | Form login + session (UI); stateless HTTP Basic (API) ([ADR-0006](adr/0006-separate-security-filter-chains-for-api-and-ui.md)). Passwords are hashed with bcrypt. Sessions are stored in the database, so they survive restarts ([ADR-0019](adr/0019-http-sessions-stored-in-the-database.md)). Optional demo mode (`APP_DEMO_LOGIN`) adds a passwordless account picker to the login page. |
 | Authorization | Route rules, `@PreAuthorize` on services, and data scoping, with 404 for other companies' resources ([ADR-0007](adr/0007-authorization-at-route-method-and-data-layers.md)) |
 | CSRF | Tokens on every UI form; the API chain never reads cookies |
 | Input | Bean Validation; image type, size and magic-byte checks; path-traversal-safe storage keys |

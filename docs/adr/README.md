@@ -22,3 +22,5 @@ Each significant design decision is recorded as an ADR (context, decision, conse
 | [ADR-0016](0016-synthetic-sample-labels.md) | Synthetic sample labels | Accepted |
 | [ADR-0017](0017-health-warning-verified-against-statutory-text-pre-fill-is-a-suggestion.md) | Health warning verified against statutory text; pre-fill is a suggestion | Accepted |
 | [ADR-0018](0018-small-container-profile-for-paas-hosting.md) | Small-container profile for PaaS hosting | Accepted |
+| [ADR-0019](0019-http-sessions-stored-in-the-database.md) | HTTP sessions stored in the database | Accepted |
+| [ADR-0020](0020-near-misses-are-compared-not-assumed.md) | Near misses are compared, not assumed | Accepted (extends ADR-0012) |

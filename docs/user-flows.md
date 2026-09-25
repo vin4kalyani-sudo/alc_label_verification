@@ -2,6 +2,17 @@
 
 End-to-end workflows for both roles, and the edge cases each one handles.
 
+## Signing in
+
+- **Normal sign-in:** type your email and password, then click **Sign in**.
+- **Demo mode** (when `APP_DEMO_LOGIN=true`, as on the production demo site):
+  1. Click the **Email** field and pick an account from the **Demo accounts** list.
+  2. The email and password fill in automatically. The password is a masked placeholder; no real password is sent to the browser.
+  3. **Sign in** is highlighted, so press Enter.
+
+  Editing either field afterwards switches back to a normal password check.
+- **Staying signed in:** sessions last 8 hours and are stored in the database, so a restart, deploy or sleep/wake of the app doesn't sign you out.
+
 ---
 
 ## Applicant
@@ -75,7 +86,11 @@ After a pipeline change in **Settings**, or for a label left `PENDING` by a fail
 | Alcohol content differs by a digit (`40%` vs `42%`) | Mismatch; OCR text is kept for numeric fields |
 | Health warning prefix not in capitals | Mismatch → **Rejected** proposal |
 | Health warning body in all caps, prefix correct | Match |
-| OCR drops punctuation (`STONES THROW`) | Match through punctuation-insensitive search |
+| Alcohol content differs by half a point or more (`6.0%` vs `5.5%`) | Mismatch |
+| Declared number appears only inside a longer one (`5%` vs label `4.5%`) | Mismatch; matches must be whole numbers |
+| Health warning missing a clause | Mismatch → **Rejected** proposal; all six key phrases must be legible |
+| Similar but different address (`…Portland, Maine` vs declared `…Austin, Texas`) | Mismatch; near misses are compared as they read on the label |
+| OCR drops punctuation or spaces (`STONES THROW`, `1L`) | Match through space- and punctuation-insensitive search |
 | Decorative label with one word per line | Match through scattered-word search (text fields only) |
 | No OCR engine available | Label saved **Pending** with an explanation; Settings shows the pipeline as unavailable |
 | Pipeline over 60 s | Label saved **Pending** (`timedOut: true`); no fallback |

@@ -10,3 +10,5 @@
 | Version | Contents |
 |---------|----------|
 | V1 | users, applicants, labels, label_images, application_data, validation_results, validation_items, human_reviews, status_overrides, settings, accepted_variants |
+| V2 | image_blobs (database-backed image storage, used by the `railway` profile) |
+| V3 | spring_session, spring_session_attributes (HTTP sessions stored in the database; Spring Session's own schema initialization is off) |

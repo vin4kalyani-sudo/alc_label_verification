@@ -55,12 +55,14 @@ Library and tessdata paths are auto-detected (Homebrew, `/usr/local`, Debian/Ubu
 
 | # | Strategy | Handles |
 |---|----------|---------|
-| 1 | Case-insensitive substring | Clean text |
-| 2 | Substring after stripping `. , ' -` | OCR dropping punctuation (`STONES THROW`) |
-| 3 | **Landmark**: fuzzy `GOVERNMENT WARNING` prefix, **plus ≥ 4 of 6** key body phrases (surgeon general, pregnancy, birth defects, drive a car, operate machinery, health problems) | Garbled small print, without accepting a legible prefix over an illegible body |
-| 4 | Sliding word window, Dice similarity | Minor OCR noise. A score ≥ 0.75 returns the expected value verbatim — **except numeric fields**, which return the OCR text (see below). |
+| 1 | Case-insensitive substring **at word and number boundaries**: a declared `5%` is not found inside `4.5%`, nor `Gin` inside `Ginger` | Clean text |
+| 2 | **Health warning only.** Fuzzy `GOVERNMENT WARNING` landmark, **plus all 6** key body phrases (surgeon general, pregnancy, birth defects, drive a car, operate machinery, health problems), allowing one misread letter per word. With all 6 legible, it returns the statutory text, with a title-case prefix reported as title case. With 2–5 legible, it returns the text actually on the label, so the comparator rejects it. Otherwise it returns `null`. The warning never reaches stages 3–5. | Garbled small print, without accepting a warning that drops a clause |
+| 3 | Same letters and digits in order, ignoring spaces and `. , ' - /` | OCR dropping punctuation or spaces (`STONES THROW`, `1L` for `1 L`) |
+| 4 | Sliding word window, Dice similarity | A score ≥ 0.9 is OCR noise and returns the expected value verbatim (numeric fields return the OCR text). A score of 0.75–0.9 returns **the label's own text**, widened to the declared word count, for the comparator to judge. |
 | 5 | Scattered words: every word of 3+ letters found somewhere (exact, or Dice ≥ 0.75). Skipped for numeric fields. | Decorative labels with one word per line (`ALDER … CREST`) |
 | — | Otherwise, the best window with a score ≥ 0.6, else `null` | |
+
+Stages 2 and 4 were tightened after a 34-image production run ([ADR-0020](adr/0020-near-misses-are-compared-not-assumed.md)). Before that, a warning missing clause (2) and an address with a different city were both reported as the declared text and approved.
 
 **Numeric fields keep the OCR text** ([ADR-0012](adr/0012-numeric-fields-keep-ocr-text-warning-prefix-must-be-capitals.md)). For alcohol content, net contents, age statement and vintage year, a one-character difference is the violation (`40%` vs `42%`). Search therefore returns what the label actually says, and the numeric comparator decides.
 
@@ -107,9 +109,9 @@ Because pre-filled values come from the label itself, verification only means so
 
 | Strategy | Fields | Rule | Match confidence |
 |----------|--------|------|------------------|
-| EXACT | health warning, vintage year, standards of fill | Whitespace-normalized equality. Vintage: digits equal. Health warning: case-insensitive equality is accepted **only if the `GOVERNMENT WARNING:` prefix is in capitals** (27 CFR 16.22), otherwise mismatch; or Dice ≥ 0.9 for OCR noise | 100 / 95 / 85 / sim×80 |
+| EXACT | health warning, vintage year, standards of fill | Whitespace-normalized equality. Vintage: digits equal. Health warning: case-insensitive equality is accepted **only if the `GOVERNMENT WARNING:` prefix is in capitals** (27 CFR 16.22), otherwise mismatch. OCR noise is accepted when Dice ≥ 0.9 **and** all 6 key body phrases are present, with the prefix-capitals check applied again. | 100 / 95 / 85 / sim×80 |
 | FUZZY | brand, fanciful name, class/type, name & address, varietal, appellation, sulfites, state of distillation | Dice coefficient on character bigrams ≥ 0.8, else containment either way | sim×100 / ratio×85 |
-| NORMALIZED | alcohol content | Parse `%` or `proof ÷ 2`; tolerance ±0.5 | 100 exact / 90 |
+| NORMALIZED | alcohol content | Parse `%` or `proof ÷ 2`; a difference **under 0.5 points** is rounding (`40%` = `40.4%`), 0.5 or more is a mismatch (`6.0%` ≠ `5.5%`) | 100 exact / 90 |
 | NORMALIZED | net contents | Convert mL, cL, L, fl oz, pt, qt, gal to mL; tolerance ±1% | 100 / 90 |
 | NORMALIZED | age statement | `N years` / `aged N` → integer years | 100 |
 | CONTAINS | country of origin | Containment either way, else ≥ 50% word overlap | 90 / overlap×80 |
@@ -153,7 +155,22 @@ Run through the application against the synthetic labels in `test-labels/` (1600
 
 The flawed label is caught for exactly its two planted defects: alcohol content (label 40%, application 42%) and a health-warning prefix that is not in capitals.
 
-Resolution matters. On images around 500 px wide, Tesseract still reads large text but not health-warning small print; those labels are proposed *Rejected* until a specialist resolves the field. Use photos of about 1000 px or wider, or the cloud pipeline.
+### Production sample run (34 labels)
+
+34 further synthetic labels were run through the deployed application on Railway: OCR pre-fill first, then a full submission with the declared values.
+
+| Group | Labels | Result |
+|-------|--------|--------|
+| Clean, varied products (spirits, wine, malt; several fonts and colours) | 14 | 13 Approved. One was wrongly sent back for correction because `1L` on the label didn't match a declared `1 L`; fixed. |
+| Clean labels, degraded images: rotated 2–3°, 5×5 blur, JPEG quality 0.25, downscaled to 640 px, Gaussian noise, low contrast, light-on-dark, monospaced font, rotation + JPEG | 9 | 9 Approved |
+| Deliberately flawed: no warning, title-case warning, warning missing clause (2), 200 mL wine, ABV and net-contents mismatches, wrong address, fanciful-name mismatch, malt ABV mismatch, no sulfite line, degraded + no warning | 11 | 7 as expected before the fixes, 10 after |
+
+- **OCR speed:** 0.5–0.9 s per image on the 512 MB container.
+- **Beverage type:** detected correctly on all 34.
+- **Pre-fill:** 6–12 values per label.
+- **Accuracy:** 29 of 34 verdicts were as expected before the fixes and 33 of 34 after (checked against a local build). The remaining case is the documented rule above: a declared optional field (fanciful name) that isn't on the label doesn't affect the verdict.
+
+Resolution matters. On images around 500 px wide, Tesseract still reads large text but not health-warning small print; those labels are proposed *Rejected* until a specialist resolves the field. Because all six warning phrases must be legible, a blurred photo is more likely to go to review than to be approved. Use photos of about 1000 px or wider, or the cloud pipeline.
 
 ## Extending
 

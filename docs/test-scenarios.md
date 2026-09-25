@@ -4,7 +4,7 @@ The full catalogue of functional, security, and non-functional test scenarios.
 
 **How each scenario is verified**
 
-- **Auto** means an automated test covers it. The *Evidence* column names the test class. All 110 tests pass with `./mvnw test`.
+- **Auto** means an automated test covers it. The *Evidence* column names the test class. All 117 tests pass with `./mvnw test`.
 - **HTTP** means it was checked against a running instance with curl, using the same session, CSRF, and multipart flow a browser uses.
 - **Manual** means it needs a person at a browser (visual and interaction checks). The *Result* column says "Not run" until someone executes it.
 
@@ -22,6 +22,8 @@ The full catalogue of functional, security, and non-functional test scenarios.
 | `SyntheticLabelsEndToEndTest` | End-to-end — real OCR over synthetic labels | Yes (skipped if absent) |
 | `RailwayProfileIntegrationTest` | Integration — `railway` profile, database image storage | No |
 | `DatabaseUrlEnvironmentPostProcessorTest` | Unit — platform database URL conversion | No |
+| `DemoLoginIntegrationTest` | Integration — demo-account picker and `/login/demo` | No |
+| `JdbcSessionIntegrationTest` | Integration — sessions stored in the database | No |
 
 ---
 
@@ -34,7 +36,7 @@ The full catalogue of functional, security, and non-functional test scenarios.
 | AUTH-03 | API with valid Basic credentials | `GET /api/v1/labels` with specialist credentials | 200 | Auto | `unauthenticatedAccess` |
 | AUTH-04 | Web sign-in, valid credentials | Submit the login form | Redirect to dashboard for the user's role | HTTP | Pass |
 | AUTH-05 | Web sign-in, wrong password | Submit a wrong password | Stays on login with "Invalid email or password" | Manual | Not run |
-| AUTH-06 | Sign out | Click **Sign out** | Session ended; redirect to `/login?logout` with notice | Manual | Not run |
+| AUTH-06 | Sign out | Click **Sign out** | Session ended; redirect to `/login?logout` with notice | HTTP | Pass (production) |
 | AUTH-07 | Bootstrap password from environment | Start with `APP_SEED_PASSWORD` set | Accounts use that password; the log does not print it | Manual | Not run |
 | AUTH-08 | Generated bootstrap password | Start without `APP_SEED_PASSWORD` on an empty DB | Random password logged once at WARN | HTTP | Pass (log checked) |
 | AUTH-09 | Seeding disabled | Start with `APP_SEED=false` on an empty DB | No accounts created | Manual | Not run |
@@ -45,6 +47,8 @@ The full catalogue of functional, security, and non-functional test scenarios.
 | AUTH-15 | Demo login off by default | Default configuration | No picker on the login page; `POST /login/demo` refused | Auto | `DemoLoginIntegrationTest.DisabledByDefault` |
 | AUTH-16 | Demo login on | `APP_DEMO_LOGIN=true`, optional allow-list | Picker lists allowed accounts only, never passwords; selecting one signs in; CSRF required; others refused | Auto + browser | `DemoLoginIntegrationTest.Enabled`; browser: signed in as Specialist Two, pass |
 | AUTH-17 | Seeder runs before `APP_USERS` | Empty database with `APP_USERS` set | Bootstrap accounts and settings created, then the declared accounts | HTTP | Pass (log order checked) |
+| AUTH-18 | Session survives a restart | Sign in, restart the app, reuse the same `SESSION` cookie | Still signed in; session row stored in `spring_session` | Auto + HTTP | `JdbcSessionIntegrationTest`; local restart: pass |
+| AUTH-19 | Demo picker fills both fields | Click **Email**, select a user | Email filled, password filled with a masked placeholder, **Sign in** focused; Enter signs in | Browser | Pass (local build; list verified on production) |
 | AUTH-10 | Login page has no credentials | View `/login` | No demo accounts or passwords shown | Manual | Pass (screenshot) |
 
 ## 2. Authorization and data isolation
@@ -109,8 +113,8 @@ The full catalogue of functional, security, and non-functional test scenarios.
 | CMP-01 | Brand case/apostrophes (`STONE'S THROW` vs `Stone's Throw`) | Match, 100 | Auto | `FieldComparatorTest.Fuzzy` |
 | CMP-02 | Partial OCR read of class/type | Match (containment) | Auto | `FieldComparatorTest.Fuzzy` |
 | CMP-03 | Different brand | Mismatch | Auto | `FieldComparatorTest.Fuzzy` |
-| CMP-04 | ABV formats (`%`, proof, `ABV`), ±0.5 | Match | Auto | `FieldComparatorTest.Normalized` |
-| CMP-05 | ABV off by more than 0.5 | Mismatch with values in reasoning | Auto | `FieldComparatorTest.Normalized` |
+| CMP-04 | ABV formats (`%`, proof, `ABV`), difference under 0.5 | Match | Auto | `FieldComparatorTest.Normalized` |
+| CMP-05 | ABV off by 0.5 or more (`45%` vs `40%`, `6.0%` vs `5.5%`) | Mismatch with values in reasoning | Auto | `FieldComparatorTest.Normalized` |
 | CMP-06 | Net contents across units (mL, cL, L, fl oz) | Match within 1% | Auto | `FieldComparatorTest.Normalized` |
 | CMP-07 | Age statement | Years compared numerically | Auto | `FieldComparatorTest.Normalized` |
 | CMP-08 | Health warning exact / whitespace | Match 100 | Auto | `FieldComparatorTest.Exact` |
@@ -123,11 +127,16 @@ The full catalogue of functional, security, and non-functional test scenarios.
 | CMP-15 | Match confidence floor | Any match ≥ 95 | Auto | `matchConfidenceIsNeverBelow95` |
 | CMP-16 | Missing value | Not found, 0 | Auto | `missingValueIsNotFound` |
 | CMP-17 | OCR: punctuation dropped | Found | Auto | `OcrTextSearchTest` |
-| CMP-18 | OCR: garbled warning with legible body | Found (landmark + 4/6 phrases) | Auto | `OcrTextSearchTest` |
+| CMP-18 | OCR: garbled warning with legible body | Found (landmark + all 6 phrases) | Auto | `OcrTextSearchTest` |
 | CMP-19 | OCR: prefix readable, body illegible | Not found | Auto | `OcrTextSearchTest` |
 | CMP-20 | OCR: one word per line | Found | Auto | `OcrTextSearchTest` |
 | CMP-21 | OCR: numeric near-miss (40% vs 42%) | OCR value kept → Mismatch | Auto | `numericFieldsKeepTheValueActuallyOnTheLabel` |
 | CMP-22 | Declared health warning ignored | Statutory text always expected | Auto | `ExpectedFieldsTest` |
+| CMP-24 | OCR: warning missing clause (2) | Label text returned, not the statutory text → Mismatch | Auto | `healthWarningMissingClauseTwoIsNotReportedAsTheFullText` |
+| CMP-25 | OCR: garbled title-case warning prefix | Mismatch, "capital letters" | Auto | `garbledTitleCaseWarningPrefixIsStillCaught` |
+| CMP-26 | OCR: similar address, different city | Not reported as the declared value → not a Match | Auto | `similarAddressIsNotReportedAsTheDeclaredOne` |
+| CMP-27 | OCR: declared `5%`, label `4.5%` | Mismatch (whole numbers only) | Auto | `numberIsNotFoundInsideALongerNumber` |
+| CMP-28 | OCR: `1L` on label, `1 L` declared | Match | Auto | `missingSpaceBetweenQuantityAndUnitIsTolerated` |
 | CMP-23 | Accepted variant | Whitelisted pair → Match 95 | Manual | Not run (needs a row in `accepted_variants`) |
 
 ## 6. Verdict and status lifecycle
@@ -214,7 +223,19 @@ The full catalogue of functional, security, and non-functional test scenarios.
 | DEP-11 | Railway profile switches on automatically | Railway marker + `DATABASE_URL`, no profile | "profile is active: railway"; redirects use `https` behind proxy headers | Auto + HTTP | `DatabaseUrlEnvironmentPostProcessorTest`; jar run: pass |
 | DEP-07 | Railway deploy end to end | Follow [deploy-railway.md](deploy-railway.md) | Health UP over HTTPS; submission works; image displays; memory < 512 MB in Railway metrics | Manual | Not run |
 | DEP-08 | HTTPS redirects behind proxy | Sign in on the Railway domain | Redirects stay on `https://`; session cookie `Secure` | Manual | Not run |
-| DEP-09 | Sleep and wake | Leave idle until sleeping, then open | First request waits for startup, then works | Manual | Not run |
+| DEP-09 | Sleep and wake | Leave idle until sleeping, then open | First request waits for startup, then works; users stay signed in (sessions in the database) | Manual | Not run |
+
+## 12. Production sample run (34 labels)
+
+Synthetic labels were generated for this run and sent to the deployed Railway application, first through OCR pre-fill and then through a full submission with the declared values. Details are in [ai-pipelines.md](ai-pipelines.md#production-sample-run-34-labels).
+
+| ID | Scenario | Labels | Expected | Type | Result |
+|----|----------|--------|----------|------|--------|
+| PRD-01 | Clean labels, varied products, fonts and colours | 14 | Approved; pre-fill ≥ 6 values; beverage type detected | HTTP | 13/14 before the fixes (`1L` not matched); 14/14 after |
+| PRD-02 | Clean labels, degraded images (rotation, blur, JPEG, 640 px, noise, low contrast, light-on-dark, monospace) | 9 | Approved | HTTP | 9/9 |
+| PRD-03 | Deliberately flawed labels (warning absent, title case or truncated; illegal size; ABV, net contents, address, fanciful name mismatches; no sulfite line) | 11 | Rejected / Needs correction / Conditionally approved per the rules | HTTP | 7/11 before the fixes; 10/11 after. The remaining one follows the documented rule that a missing optional field is ignored. |
+
+OCR took 0.5–0.9 s per image on the 512 MB container. The results after the fixes were measured on a local build; re-run against production once the fixes are deployed.
 
 ---
 
@@ -240,15 +261,16 @@ Some scenarios are both automated and verified live, so the columns overlap.
 
 | Area | Scenarios | Automated | Verified live (HTTP / browser / Railway) | Not yet run |
 |------|-----------|-----------|------------------------------------------|-------------|
-| Authentication | 17 | 9 | 6 | 4 |
+| Authentication | 19 | 10 | 9 | 3 |
 | Authorization | 11 | 8 | 0 | 3 |
 | Pre-fill | 15 | 9 | 2 | 6 |
 | Submission | 14 | 6 | 1 | 7 |
-| Comparison | 23 | 22 | 0 | 1 |
+| Comparison | 28 | 27 | 0 | 1 |
 | Verdict / lifecycle | 11 | 11 | 0 | 0 |
 | Review | 11 | 7 | 1 | 3 |
 | Batch | 6 | 3 | 0 | 3 |
 | Settings / dashboard / applicants | 7 | 4 | 0 | 3 |
 | Security / non-functional | 10 | 0 | 4 | 6 |
 | Deployment | 11 | 5 | 5 | 3 |
-| **Total** | **136** | **84** | **19** | **39** |
+| Production sample run | 3 | 0 | 3 | 0 |
+| **Total** | **146** | **90** | **25** | **38** |

@@ -52,6 +52,7 @@ Plan limits below are as published on Railway's pricing page at the time of writ
 | [`application-railway.yml`](../src/main/resources/application-railway.yml) | Trust Railway's HTTPS proxy headers, secure session cookie, 20 web threads, 4 DB connections, database image storage, 1 OCR job at a time |
 | `DatabaseUrlEnvironmentPostProcessor` | Accepts Railway's `postgresql://user:pass@host:port/db` URL directly |
 | `V2__image_blobs.sql` | Table for database-backed image storage |
+| `V3__http_sessions.sql` | Session tables, so sign-ins survive sleep/wake and redeploys ([ADR-0019](adr/0019-http-sessions-stored-in-the-database.md)) |
 
 ## Step by step
 
@@ -103,7 +104,12 @@ In the app service's **Settings → Networking**, choose **Generate Domain**. Ra
 
 ### 5. First sign-in
 
-Sign in with the specialist email and `APP_SEED_PASSWORD`. Then, so a later empty database is never seeded again with that password:
+Sign in with the specialist email and `APP_SEED_PASSWORD`.
+
+> [!TIP]
+> With `APP_DEMO_LOGIN=true`, you don't need a password. Click the **Email** field, **select a user** from the **Demo accounts** list, and the email and password fill in automatically. Then press **Sign in**.
+
+Then, so a later empty database is never seeded again with that password:
 
 1. Set `APP_SEED=false`.
 2. Redeploy.
@@ -125,6 +131,7 @@ Before relying on the deployment:
 3. Open the label as the specialist and confirm the image displays; it is served from the database.
 4. Watch **Metrics → Memory** during a few submissions. It should stay below 512 MB.
 5. Check that the login redirect stays on `https://`.
+6. Redeploy (or wait for the app to sleep and wake), then reload a page. You should still be signed in, because sessions are stored in the database.
 
 ## Measured locally under the same limits
 

@@ -57,7 +57,14 @@ In the app service's **Variables**, add `APP_USERS` with the JSON array as the v
 
 ## Demo mode: pick an account on the login page
 
-For demonstrations, the login page's **Email** field can open a list of demo accounts, each with initials, name, email and a Specialist or Applicant badge. Picking one fills in the email and password; then click **Sign in**.
+For demonstrations, the login page's **Email** field can open a list of demo accounts, each with initials, name, email and a Specialist or Applicant badge.
+
+> [!IMPORTANT]
+> **How to sign in with demo mode:**
+> 1. Click the **Email** field. The **Demo accounts** list opens.
+> 2. **Select a user.**
+> 3. The **email and password load automatically**. There's nothing to type.
+> 4. **Sign in** is highlighted and focused, so press Enter or click it.
 
 | Variable | Default | Effect |
 |---|---|---|

@@ -10,7 +10,8 @@ What the current build deliberately leaves out, and what a production deployment
 | API uses HTTP Basic | OAuth2 resource server (JWT) with scopes per endpoint |
 | No lockout or password reset | Delegated to the IdP; until then, add throttling on failed logins |
 | Two roles | Add supervisor/manager (settings, reassignment, reporting) and per-specialist queues |
-| In-memory sessions | Spring Session (Redis or JDBC) for multiple instances |
+| Sessions in the application database (Spring Session JDBC) | Sessions already survive restarts and work across instances. At high traffic, move them to Redis to take load off PostgreSQL. |
+| Demo-account picker (`APP_DEMO_LOGIN`) | Keep it off in every non-demo environment. Anyone can sign in while it is on. |
 
 ## 2. Security hardening
 
